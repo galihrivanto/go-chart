@@ -121,6 +121,11 @@ func (c Color) AverageWith(other Color) Color {
 
 // String returns a css string representation of the color.
 func (c Color) String() string {
+	// non rgba support
+	if c.A == 0 || c.A == 255 {
+		return fmt.Sprintf("rgb(%v,%v,%v)", c.R, c.G, c.B)
+	}
+
 	fa := float64(c.A) / float64(255)
 	return fmt.Sprintf("rgba(%v,%v,%v,%.1f)", c.R, c.G, c.B, fa)
 }
