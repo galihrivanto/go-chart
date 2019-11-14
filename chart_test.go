@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/blend/go-sdk/assert"
+
 	"github.com/wcharczuk/go-chart/drawing"
-	"github.com/wcharczuk/go-chart/seq"
 )
 
 func TestChartGetDPI(t *testing.T) {
@@ -274,31 +274,44 @@ func TestChartGetValueFormatters(t *testing.T) {
 func TestChartHasAxes(t *testing.T) {
 	assert := assert.New(t)
 
-	assert.False(Chart{}.hasAxes())
+	assert.True(Chart{}.hasAxes())
+	assert.False(Chart{XAxis: XAxis{Style: Hidden()}, YAxis: YAxis{Style: Hidden()}, YAxisSecondary: YAxis{Style: Hidden()}}.hasAxes())
 
 	x := Chart{
 		XAxis: XAxis{
-			Style: Style{
-				Show: true,
-			},
+			Style: Hidden(),
+		},
+		YAxis: YAxis{
+			Style: Shown(),
+		},
+		YAxisSecondary: YAxis{
+			Style: Hidden(),
 		},
 	}
 	assert.True(x.hasAxes())
 
 	y := Chart{
+		XAxis: XAxis{
+			Style: Shown(),
+		},
 		YAxis: YAxis{
-			Style: Style{
-				Show: true,
-			},
+			Style: Hidden(),
+		},
+		YAxisSecondary: YAxis{
+			Style: Hidden(),
 		},
 	}
 	assert.True(y.hasAxes())
 
 	ya := Chart{
+		XAxis: XAxis{
+			Style: Hidden(),
+		},
+		YAxis: YAxis{
+			Style: Hidden(),
+		},
 		YAxisSecondary: YAxis{
-			Style: Style{
-				Show: true,
-			},
+			Style: Shown(),
 		},
 	}
 	assert.True(ya.hasAxes())
@@ -312,15 +325,12 @@ func TestChartGetAxesTicks(t *testing.T) {
 
 	c := Chart{
 		XAxis: XAxis{
-			Style: Style{Show: true},
 			Range: &ContinuousRange{Min: 9.8, Max: 19.8},
 		},
 		YAxis: YAxis{
-			Style: Style{Show: true},
 			Range: &ContinuousRange{Min: 9.9, Max: 19.9},
 		},
 		YAxisSecondary: YAxis{
-			Style: Style{Show: true},
 			Range: &ContinuousRange{Min: 9.7, Max: 19.7},
 		},
 	}
@@ -336,19 +346,14 @@ func TestChartSingleSeries(t *testing.T) {
 	assert := assert.New(t)
 	now := time.Now()
 	c := Chart{
-		Title:      "Hello!",
-		TitleStyle: StyleShow(),
-		Width:      1024,
-		Height:     400,
+		Title:  "Hello!",
+		Width:  1024,
+		Height: 400,
 		YAxis: YAxis{
-			Style: StyleShow(),
 			Range: &ContinuousRange{
 				Min: 0.0,
 				Max: 4.0,
 			},
-		},
-		XAxis: XAxis{
-			Style: StyleShow(),
 		},
 		Series: []Series{
 			TimeSeries{
@@ -392,8 +397,8 @@ func TestChartRegressionBadRangesByUser(t *testing.T) {
 		},
 		Series: []Series{
 			ContinuousSeries{
-				XValues: seq.Range(1.0, 10.0),
-				YValues: seq.Range(1.0, 10.0),
+				XValues: LinearRange(1.0, 10.0),
+				YValues: LinearRange(1.0, 10.0),
 			},
 		},
 	}
@@ -408,8 +413,8 @@ func TestChartValidatesSeries(t *testing.T) {
 	c := Chart{
 		Series: []Series{
 			ContinuousSeries{
-				XValues: seq.Range(1.0, 10.0),
-				YValues: seq.Range(1.0, 10.0),
+				XValues: LinearRange(1.0, 10.0),
+				YValues: LinearRange(1.0, 10.0),
 			},
 		},
 	}
@@ -419,7 +424,7 @@ func TestChartValidatesSeries(t *testing.T) {
 	c = Chart{
 		Series: []Series{
 			ContinuousSeries{
-				XValues: seq.Range(1.0, 10.0),
+				XValues: LinearRange(1.0, 10.0),
 			},
 		},
 	}
@@ -479,18 +484,22 @@ func TestChartE2ELine(t *testing.T) {
 	assert := assert.New(t)
 
 	c := Chart{
-		Height: 50,
-		Width:  50,
+		Height:         50,
+		Width:          50,
+		TitleStyle:     Hidden(),
+		XAxis:          HideXAxis(),
+		YAxis:          HideYAxis(),
+		YAxisSecondary: HideYAxis(),
 		Canvas: Style{
-			Padding: Box{IsSet: true},
+			Padding: BoxZero,
 		},
 		Background: Style{
-			Padding: Box{IsSet: true},
+			Padding: BoxZero,
 		},
 		Series: []Series{
 			ContinuousSeries{
-				XValues: seq.RangeWithStep(0, 4, 1),
-				YValues: seq.RangeWithStep(0, 4, 1),
+				XValues: LinearRangeWithStep(0, 4, 1),
+				YValues: LinearRangeWithStep(0, 4, 1),
 			},
 		},
 	}
@@ -518,33 +527,40 @@ func TestChartE2ELine(t *testing.T) {
 func TestChartE2ELineWithFill(t *testing.T) {
 	assert := assert.New(t)
 
+	logBuffer := new(bytes.Buffer)
+
 	c := Chart{
 		Height: 50,
 		Width:  50,
 		Canvas: Style{
-			Padding: Box{IsSet: true},
+			Padding: BoxZero,
 		},
 		Background: Style{
-			Padding: Box{IsSet: true},
+			Padding: BoxZero,
 		},
+		TitleStyle:     Hidden(),
+		XAxis:          HideXAxis(),
+		YAxis:          HideYAxis(),
+		YAxisSecondary: HideYAxis(),
 		Series: []Series{
 			ContinuousSeries{
 				Style: Style{
-					Show:        true,
 					StrokeColor: drawing.ColorBlue,
 					FillColor:   drawing.ColorRed,
 				},
-				XValues: seq.RangeWithStep(0, 4, 1),
-				YValues: seq.RangeWithStep(0, 4, 1),
+				XValues: LinearRangeWithStep(0, 4, 1),
+				YValues: LinearRangeWithStep(0, 4, 1),
 			},
 		},
+		Log: NewLogger(OptLoggerStdout(logBuffer), OptLoggerStderr(logBuffer)),
 	}
+
+	assert.Equal(5, len(c.Series[0].(ContinuousSeries).XValues))
+	assert.Equal(5, len(c.Series[0].(ContinuousSeries).YValues))
 
 	var buffer = &bytes.Buffer{}
 	err := c.Render(PNG, buffer)
 	assert.Nil(err)
-
-	// do color tests ...
 
 	i, err := png.Decode(buffer)
 	assert.Nil(err)

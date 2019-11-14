@@ -2,6 +2,7 @@ package chart
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -71,7 +72,48 @@ func TestCanvasStyleSVG(t *testing.T) {
 
 	svgString := canvas.styleAsSVG(set)
 	assert.NotEmpty(svgString)
+	assert.True(strings.HasPrefix(svgString, "style=\""))
 	assert.True(strings.Contains(svgString, "stroke:rgba(255,255,255,1.0)"))
 	assert.True(strings.Contains(svgString, "stroke-width:5"))
 	assert.True(strings.Contains(svgString, "fill:rgba(255,255,255,1.0)"))
+	assert.True(strings.HasSuffix(svgString, "\""))
+}
+
+func TestCanvasClassSVG(t *testing.T) {
+	as := assert.New(t)
+
+	set := Style{
+		ClassName: "test-class",
+	}
+
+	canvas := &canvas{dpi: DefaultDPI}
+
+	as.Equal("class=\"test-class\"", canvas.styleAsSVG(set))
+}
+
+func TestCanvasCustomInlineStylesheet(t *testing.T) {
+	b := strings.Builder{}
+
+	canvas := &canvas{
+		w:     &b,
+		css:   ".background { fill: red }",
+	}
+
+	canvas.Start(200, 200)
+
+	assert.New(t).Contains(b.String(), fmt.Sprintf(`<style type="text/css"><![CDATA[%s]]></style>`, canvas.css))
+}
+
+func TestCanvasCustomInlineStylesheetWithNonce(t *testing.T) {
+	b := strings.Builder{}
+
+	canvas := &canvas{
+		w:     &b,
+		css:   ".background { fill: red }",
+		nonce: "RAND0MSTRING",
+	}
+
+	canvas.Start(200, 200)
+
+	assert.New(t).Contains(b.String(), fmt.Sprintf(`<style type="text/css" nonce="%s"><![CDATA[%s]]></style>`, canvas.nonce, canvas.css))
 }
